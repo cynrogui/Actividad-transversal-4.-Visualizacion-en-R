@@ -1,0 +1,176 @@
+---
+title: “Actividad transversal 4. Visualización de datos”
+subtitle: "El costo de la educación universitaria en el mundo" 
+author: "Cynthia Romero Guido"
+date: "2025-05-28"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    theme: journal
+    highlight: tango
+lang: es-ES
+---
+
+# Cargar los paquetes necesarios
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+# Instalar si es necesario:
+# install.packages(c("readr", "ggplot2", "dplyr", "tidyr"))
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+
+# Semana 1. Obtención de los datos a partir de Kaggle
+
+## Carga de datos
+
+```{r datos-costos}
+# Cargar el dataset inicial
+dataset <- read_csv(show_col_types = FALSE, "International_Education_Costs.csv")
+```
+## Exploración inicial
+
+```{r exploracion-inicial}
+head(dataset)
+str(dataset)
+dim(dataset)
+colnames(dataset)
+summary(dataset)
+```
+# Semana 2. Definición del problema y selección del dataset
+
+**Justificación del dataset elegido**
+
+Para esta actividad seleccioné el dataset International Education Costs disponible en la base de datos Kagle <https://www.kaggle.com/ <https://www.kaggle.com/datasets/adilshamim8/cost-of-international-education, una plataforma de acceso a datos, oficial, abierta y confiable perteneciente a Google. El dataset contiene  información sobre las carreras que se ofertan en universidades de diferentes países y los costos que los estudiantes deben cubrir durante su formación universitaria, tales como: colegiatura, renta, manutención, visa de estudiante y seguro.
+
+El dataset se actualiza cada año y la última actualización se realizó hace 23 días. Este datase se encuentra limpio y homogenizado en la misma moneda. Además, los datos provienen de fuentes oficiales y se esperaría que no presenten sesgos en la forma de recolectarlos.
+
+Por otra parte, este dataset permite practicar y desarrollar habilidades para el uso de R realizando acciones básicas de un análisis de datos como: conocer la estructura del dataset y calcular estadísticas clave, así como la transformación de los datos y su visualización en gráficos.
+
+**Preguntas del análisis**
+
+¿En cuál país es más caro realizar estudios universitarios?
+¿Cuál es la carrera más cara?
+¿En qué otros países se puede estudiar esa carrera a menor costo?
+
+
+# Semana 3. Análisis y visualizaciones
+
+**Corroborar que no hay valores faltantes (NA)**
+
+```{r datos-nulos}
+sum(is.na(dataset))
+```
+## Transformaciones
+
+**Filtrado de columnas a sumar para tener costo total**
+
+```{r sumar-columnas}
+columnas_a_sumar <- c("Tuition_USD", "Rent_USD", "Visa_Fee_USD", "Insurance_USD")
+print(columnas_a_sumar)
+```
+**Suma de los costos y se agrega columna de la sumatoria**
+
+```{r agregar-columna}
+mi_data <- dataset %>%
+  mutate(Total_Cost_USD = rowSums(.[ , columnas_a_sumar]))
+print(mi_data)
+```
+**Dataset sin columnas de costos conservando sólo las columnas necesarias**
+
+```{r columnas-necesarias}
+data_solo_columnas_necesarias <- mi_data %>%
+  select(-c("Tuition_USD", "Living_Cost_Index", "Rent_USD", "Visa_Fee_USD", "Insurance_USD", "Exchange_Rate"))
+print(data_solo_columnas_necesarias)
+```
+
+**Filtrado de filas correspondientes al Nivel licenciatura (Bachelor)**
+
+```{r filtrar-filar}
+data_filtrado <- filter(data_solo_columnas_necesarias, Level == "Bachelor")
+print(data_filtrado)
+```
+**Cálculo del costo total por número de años que dura la carrera**
+
+```{r filtrar-datos}
+data_filtrado$Final_Cost_USD <- data_filtrado$Duration_Years * data_filtrado$Total_Cost_USD
+```
+
+**Países más caros para estudiar**
+
+```{r paises-caros}
+países_más_caros <- filter(data_filtrado, Final_Cost_USD > 150000)
+summary(países_más_caros)
+```
+
+**Países más baratos para estudiar**
+
+```{r paises-baratos}
+países_más_baratos <- filter(data_filtrado, Final_Cost_USD < 5000)
+summary(países_más_baratos)
+```
+**Calcular medidas de tendencia central para el costo total**
+
+```{r medidas-tendencia}
+promedio_columna <- mean(países_más_caros$Final_Cost_USD)
+
+print(promedio_columna)
+
+mediana_columna <- median(países_más_caros$Final_Cost_USD)
+
+print(mediana_columna)
+
+promedio_columna <- mean(países_más_baratos$Final_Cost_USD)
+
+print(promedio_columna)
+
+mediana_columna <- median(países_más_baratos$Final_Cost_USD)
+
+print(mediana_columna)
+```
+**Boxplot 1. Países más caros para estudiar**
+
+```{r grafico-paises_caros}
+boxplot(Final_Cost_USD ~ Country, data = países_más_caros,
+        main = "Países más caros para estudiar")
+```
+
+**Boxplot 2. Países más baratos para estudiar**
+
+```{r grafico-paises-baratos}
+boxplot(Final_Cost_USD ~ Country, data = países_más_baratos, 
+        main = "Países más baratos para estudiar")
+```
+
+**Gráfico de barras 1. Carreras más cara a nivel mundial**
+
+```{r grafico-caro}
+ggplot(países_más_caros, aes (x = Program, y = Final_Cost_USD)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  labs(title = "Carreras más caras a nivel mundial", x = "Carrera", y = "Costo en USD")
+```
+
+**Gráfico de barras 2. Carreras más baratas a nivel mundial**
+
+```{r grafico-barato}
+ggplot(países_más_baratos, aes (x = Program, y = Final_Cost_USD)) +
+  geom_bar(stat = "identity", fill = "green") +
+  labs(title = "Carreras más baratas a nivel mundial", x = "Carrera", y = "Costo en USD")
+```
+
+# Semana 4. Conclusiones y publicación
+**Principales hallazgos**
+Costos de la educación universitaria en el mundo: El análisis realizado mostró que los países donde es más costoso estudiar una licenciatura es en Estados Unidos de Norteamérica (USA), Canadá y Singapur, siendo USA el país que a nivel mundial registra los costos más elevados. En contraparte, estudiar en países de Sudamérica como Argentina,Uruguay y Brazil es mucho más económico.
+
+Carreras universitarias más y menos costosas: La licenciatura más costosa a nivel mundial es Ciencias de la Computación de la Universidad de Stanford, USA, una carrera de 4 años con un costo total de 244,240 USD, mientras que la licenciatura más barata a nivel mundial es Desarrollo de Software de la Universidad Nacional de la Plata, Argentina, una carrera de 4 años con un costo total de 2440 USD. Al observar el conjuntos de datos "países_más_baratos" que se obtuvo en este análisis, se puede ver que la licenciatura en Ciencias de la Computación también se puede estudiar en la Universidad Aalborg en Dinamarca y en la Universidad de Helsinki en Finlandia a costos mucho más bajos (4410 USD y 4860 USD, respectivamente) que en USA. 
+
+Estos resultados dan pauta a preguntarse ¿cuál es son los factores que determinan los costos tan elevados de la educación universitaria en USA con respecto a otros países como Dinamarca y Finlandia, cuyo nivel de desarrolo es tan alto como el de USA? 
+También sería interesante investigar si el contenido temático y el nivel académico de la carrera Ciencias de la Computación de la Universidad de Stanford y de la Universidad Nacional de la Plata es equiparable o no. 
+
+**Reflexión**
+Este ejercicio permitió aplicar los conocimientos de limpieza, transformación y visualización de datos adquiridos durante el curso Visualización y análisis de datos en R. Además de aplicar dichos conocimientos, aprendí a buscar y descargar conjuntos de datos a partir de bases de datos públicas, a plantear preguntas, a realizar un checklist para determinar si los datos son óptimos para ser analizados, a establecer una estrategia de análisis y a decidir cuáles gráficos son los más adecuados para visualizar los resultados obtenidos y a comunicar los resultados a través de un documento RMarkdown.
