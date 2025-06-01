@@ -1,1 +1,2 @@
 # Actividad-transversal-4.-Visualizacion-en-R
+Este proyecto corresponde al proyecto final del curso de Visualización y análisis de datos en R que forma  parte de la Especialidad de Ciencias de Datos del Programa Women in by EMTECH. El reporte incluye un análisis de datos sobre el costo de la educación superior en el mundo, se identifican los países donde es más caro y más barato estudiar y las carreras universitarias más y menos costosas. 
